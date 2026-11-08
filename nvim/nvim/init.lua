@@ -15,6 +15,15 @@ o.smartcase = true
 o.undofile = true
 o.signcolumn = "yes"       -- keep text from shifting when diagnostics appear
 o.clipboard = "unnamedplus" -- yank/paste via the system clipboard
+if vim.fn.has("wsl") == 1 and vim.fn.executable("win32yank.exe") == 1 then
+  -- WSL: share the clipboard with Windows.
+  vim.g.clipboard = {
+    name = "win32yank",
+    copy = { ["+"] = "win32yank.exe -i --crlf", ["*"] = "win32yank.exe -i --crlf" },
+    paste = { ["+"] = "win32yank.exe -o --lf", ["*"] = "win32yank.exe -o --lf" },
+    cache_enabled = 0,
+  }
+end
 o.completeopt = { "menu", "menuone", "noselect" } -- Enter never auto-accepts
 o.pumheight = 10
 

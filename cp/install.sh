@@ -12,7 +12,18 @@ export PATH="$bin:$PATH"
 # Packages (Ubuntu only; macOS uses Xcode clang + Homebrew).
 if command -v apt-get >/dev/null 2>&1; then
     sudo apt-get update
-    sudo apt-get install -y g++ clangd git curl python3 pipx xclip wl-clipboard xdg-utils
+    sudo apt-get install -y g++ clangd git git-lfs curl python3 pipx xclip wl-clipboard xdg-utils
+    if grep -qi microsoft /proc/version 2>/dev/null; then
+        # WSL: wslview opens URLs in the Windows browser; win32yank shares the clipboard.
+        sudo apt-get install -y wslu unzip
+        if ! command -v win32yank.exe >/dev/null 2>&1; then
+            tmp=$(mktemp -d)
+            curl -fsSL -o "$tmp/w.zip" https://github.com/equalsraf/win32yank/releases/download/v0.1.1/win32yank-x64.zip
+            unzip -o -q "$tmp/w.zip" win32yank.exe -d "$bin"
+            chmod +x "$bin/win32yank.exe"
+            rm -rf "$tmp"
+        fi
+    fi
     # clangd picks the newest GCC directory; its libstdc++ headers must exist,
     # or clangd reports "'bits/stdc++.h' file not found".
     gccver=$(ls /usr/lib/gcc/*-linux-gnu/ 2>/dev/null | grep -E '^[0-9]+$' | sort -n | tail -1)
@@ -50,6 +61,15 @@ if [ -e "$HOME/.config/nvim" ] && [ ! -L "$HOME/.config/nvim" ]; then
 fi
 ln -sfn "$dot/nvim/nvim" "$HOME/.config/nvim"
 
+# Git: include the shared settings, link the global ignore file.
+git config --global --get-all include.path | grep -qx "$dot/git/config" \
+    || git config --global --add include.path "$dot/git/config"
+mkdir -p "$HOME/.config/git"
+if [ ! -e "$HOME/.config/git/ignore" ] || cmp -s "$HOME/.config/git/ignore" "$dot/git/ignore"; then
+    ln -sf "$dot/git/ignore" "$HOME/.config/git/ignore"
+fi
+git config --global user.name >/dev/null || echo "git: set user.name / user.email (git config --global user.name ...)"
+
 # Commands -> ~/.local/bin
 for f in "$dot"/cp/bin/*; do
     ln -sf "$f" "$bin/$(basename "$f")"
@@ -63,6 +83,17 @@ if [ ! -d "$root/atcoder" ] && [ ! -d "$root/ac-library" ]; then
 fi
 if [ ! -d "$root/icpc-kit" ]; then
     git clone https://github.com/hamikan/icpc-kit "$root/icpc-kit" || echo "icpc-kit: clone failed (:Lib will not work)"
+fi
+
+# WSL: copy the WezTerm config to the Windows side (%USERPROFILE%\.config\wezterm).
+# Windows cannot follow WSL symlinks, so this is a copy; re-run after changes.
+if grep -qi microsoft /proc/version 2>/dev/null; then
+    winhome=$(wslpath "$(cmd.exe /c 'echo %USERPROFILE%' 2>/dev/null | tr -d '\r')" 2>/dev/null || true)
+    if [ -n "$winhome" ] && [ -d "$winhome" ]; then
+        mkdir -p "$winhome/.config/wezterm"
+        cp "$dot"/wezterm/*.lua "$winhome/.config/wezterm/"
+        echo "wezterm: config copied to $winhome/.config/wezterm"
+    fi
 fi
 
 echo

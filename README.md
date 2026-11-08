@@ -1,6 +1,6 @@
 # dotfiles
 
-Neovim（プラグインなしの最小構成）と WezTerm、競プロ用スクリプトの設定です。
+Neovim（プラグインなしの最小構成）、WezTerm、Git、競プロ用スクリプトの設定です。macOS / Ubuntu / Windows（WSL2）で使えます。
 
 ## セットアップ（macOS / Ubuntu 共通）
 
@@ -19,6 +19,29 @@ sh ~/dotfiles/cp/install.sh
 - `~/CP/atcoder` も `~/CP/ac-library` もなければ ACL を clone する
 
 Neovim は 0.11 以上が必要です（`vim.lsp.config` を使っています）。Ubuntu の apt 版は古いことが多いので、公式の AppImage か tarball を使ってください。
+
+## Windows でのセットアップ（WSL2）
+
+競プロ環境は WSL2 の Ubuntu の中に作り、WezTerm だけ Windows 側で動かします。
+
+1. PowerShell を管理者で開き、`wsl --install` を実行して再起動する。起動した Ubuntu でユーザー名とパスワードを決める
+2. WezTerm を入れる（PowerShell で `winget install wez.wezterm`）
+3. Ubuntu の中で次を実行する
+
+   ```bash
+   sudo apt update && sudo apt install -y git curl
+   git clone https://github.com/Keita-Kindai/dotfiles.git ~/dotfiles
+   sh ~/dotfiles/cp/install.sh
+   git config --global user.name "Keita-Kindai"
+   git config --global user.email "<メールアドレス>"
+   ```
+
+4. WezTerm を起動し直す。WSL の Ubuntu が直接開く
+
+- `install.sh` は WezTerm の設定を `%USERPROFILE%\.config\wezterm` にコピーする。Windows は WSL のシンボリックリンクを辿れないのでコピーにしている。設定を変えたら `install.sh` を再実行する
+- macOS で Cmd を使うキーは、Windows では Alt に置き換わる（例: Alt+T で新しいタブ、Alt+C / Alt+V でコピー / 貼り付け）
+- クリップボードは win32yank、ブラウザは wslview で Windows 側と連携する
+- 作業ファイルは `~/CP`（WSL 側）に置く。`/mnt/c` の下はビルドが遅い
 
 ## 競プロの流れ
 

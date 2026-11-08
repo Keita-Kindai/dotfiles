@@ -1,0 +1,9 @@
+# Shared git settings. Included from ~/.gitconfig by cp/install.sh.
+# user.name / user.email stay in ~/.gitconfig (set them per machine).
+[init]
+	defaultBranch = main
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true

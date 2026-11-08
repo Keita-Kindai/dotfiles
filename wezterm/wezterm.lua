@@ -12,6 +12,35 @@ config.adjust_window_size_when_changing_font_size = true
 config.initial_cols = 120
 config.initial_rows = 30
 
+----------------------------------------------------
+-- OrbStack 接続設定
+----------------------------------------------------
+-- config.ssh_domains = {
+--   {
+--     name = 'orbstack-ubuntu',
+--     -- OrbStackの仮想マシン名 + .orb.local (例: ubuntu.orb.local)
+--     -- もしくは IPアドレス (192.168.139.202) のままでもOKです
+--     remote_address = 'ubuntu.orb.local',
+--     username = 'keita', -- OrbStack内のユーザー名
+--   },
+-- }
+
+local is_windows = wezterm.target_triple:find("windows") ~= nil
+
+if is_windows then
+  -- Windows: open the WSL distribution (Ubuntu) directly.
+  local wsl = wezterm.default_wsl_domains()
+  if #wsl > 0 then
+    config.default_domain = wsl[1].name
+  end
+else
+  config.default_prog = {
+    '/bin/zsh',
+    '-lc',
+    'ssh ubuntu@orb; exec /bin/zsh -l'
+  }
+end
+
 config.debug_key_events = true
 
 ----------------------------------------------------
@@ -133,5 +162,15 @@ table.insert(custom_keys, {
   action = act.SendString("\\"),
 })
 
-return config
+----------------------------------------------------
+-- Windows: the Win key belongs to the OS, so use Alt where macOS uses Cmd.
+----------------------------------------------------
+if is_windows then
+  for _, k in ipairs(config.keys) do
+    if k.mods then
+      k.mods = k.mods:gsub("SUPER", "ALT"):gsub("CMD", "ALT")
+    end
+  end
+end
 
+return config
