@@ -77,6 +77,35 @@ vim.keymap.set("i", "<S-Tab>", function()
   return vim.fn.pumvisible() == 1 and "<C-p>" or "<S-Tab>"
 end, { expr = true })
 
+-- Auto-close brackets -------------------------------------------------------
+--   ( [ {    insert the pair with the cursor inside
+--   ) ] }    step over the same closing bracket
+--   Enter    between {} opens an indented block
+--   BS       between an empty pair deletes both
+local pairs_map = { ["("] = ")", ["["] = "]", ["{"] = "}" }
+local function around_cursor()
+  local col, line = vim.fn.col("."), vim.fn.getline(".")
+  return line:sub(col - 1, col - 1), line:sub(col, col)
+end
+for open, close in pairs(pairs_map) do
+  vim.keymap.set("i", open, open .. close .. "<C-g>U<Left>")
+  vim.keymap.set("i", close, function()
+    local _, next = around_cursor()
+    return next == close and "<C-g>U<Right>" or close
+  end, { expr = true })
+end
+vim.keymap.set("i", "<CR>", function()
+  local prev, next = around_cursor()
+  if vim.fn.pumvisible() == 0 and prev == "{" and next == "}" then
+    return "<CR><Esc>O"
+  end
+  return "<CR>"
+end, { expr = true })
+vim.keymap.set("i", "<BS>", function()
+  local prev, next = around_cursor()
+  return (pairs_map[prev] and pairs_map[prev] == next) and "<BS><Del>" or "<BS>"
+end, { expr = true })
+
 -- Competitive programming -------------------------------------------------
 -- Run a command in a terminal split, in the directory of the current file.
 local function run_in_term(cmd)

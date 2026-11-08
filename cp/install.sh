@@ -85,6 +85,14 @@ if [ ! -d "$root/icpc-kit" ]; then
     git clone https://github.com/hamikan/icpc-kit "$root/icpc-kit" || echo "icpc-kit: clone failed (:Lib will not work)"
 fi
 
+# WezTerm config: link on macOS / Linux desktop (WSL copies it to Windows below).
+if ! grep -qi microsoft /proc/version 2>/dev/null; then
+    if [ -e "$HOME/.config/wezterm" ] && [ ! -L "$HOME/.config/wezterm" ]; then
+        mv "$HOME/.config/wezterm" "$HOME/.config/wezterm.backup.$(date +%s)"
+    fi
+    ln -sfn "$dot/wezterm" "$HOME/.config/wezterm"
+fi
+
 # WSL: copy the WezTerm config to the Windows side (%USERPROFILE%\.config\wezterm).
 # Windows cannot follow WSL symlinks, so this is a copy; re-run after changes.
 if grep -qi microsoft /proc/version 2>/dev/null; then

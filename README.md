@@ -14,6 +14,8 @@ sh ~/dotfiles/cp/install.sh
 - Ubuntu の場合は `g++ clangd python3 pipx xclip` を apt で入れる
 - `oj` がなければ `pipx install online-judge-tools`
 - `~/.config/nvim` を `dotfiles/nvim/nvim` へのリンクにする（既存の設定は退避）
+- `~/.config/wezterm` を `dotfiles/wezterm` へのリンクにする（既存の設定は退避。WSL では Windows 側へコピー）
+- Git の共通設定を `~/.gitconfig` から include し、`~/.config/git/ignore` をリンクする
 - `cp-build` `cpt` `cpnew` を `~/.local/bin` にリンクする
 - `~/CP` に `compile_flags.txt` と `.clangd` を置く（clangd 用）
 - `~/CP/atcoder` も `~/CP/ac-library` もなければ ACL を clone する
@@ -66,6 +68,7 @@ Neovim 内のキー:
 | `:%y` | ファイル全体をクリップボードへコピー（提出用） |
 | `Ctrl-Space` | 補完を手動で開く（`.` `->` `::` の後は自動） |
 | `Tab` / `Shift-Tab` | 補完候補の選択、`Ctrl-y` で確定 |
+| `(` `[` `{` | 閉じ括弧も入れてカーソルを中に置く。`{}` の中で Enter を押すとブロックに展開、閉じ括弧を打つと飛び越える |
 
 シェルからは `cpt` でビルドとサンプルテスト、`cpt -e 1e-6` で誤差ジャッジです。
 
