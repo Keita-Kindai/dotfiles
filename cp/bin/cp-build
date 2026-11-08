@@ -1,0 +1,38 @@
+#!/bin/sh
+# Build a C++ solution with a precompiled header (bits/stdc++.h + ACL).
+# usage: cp-build [main.cpp] [a.out]
+set -eu
+
+root=${CP_ROOT:-$HOME/CP}
+src=${1:-main.cpp}
+out=${2:-a.out}
+build="$root/.build"
+header="$HOME/dotfiles/cp/pch.hpp"
+mkdir -p "$build"
+
+set -- -std=c++23 -O2 -Wall -Wextra -I "$root" -I "$root/ac-library"
+
+if [ "$(uname)" = Darwin ]; then
+    cxx=${CP_CXX:-/usr/bin/clang++}
+    # Homebrew provides bits/stdc++.h for Apple clang.
+    [ -d /opt/homebrew/include ] && set -- "$@" -isystem /opt/homebrew/include
+    pch="$build/pch.pch"
+    if [ ! -f "$pch" ] || [ "$header" -nt "$pch" ] || [ "$cxx" -nt "$pch" ]; then
+        "$cxx" "$@" -x c++-header "$header" -o "$pch"
+    fi
+    exec "$cxx" "$@" -include-pch "$pch" "$src" -o "$out"
+else
+    # Use the newest g++-N if there is one (older g++ may lack -std=c++23).
+    cxx=${CP_CXX:-$(ls /usr/bin/g++-[0-9]* 2>/dev/null | sort -t- -k2 -n | tail -1)}
+    cxx=${cxx:-g++}
+    if ! echo | "$cxx" -std=c++23 -x c++ -fsyntax-only - 2>/dev/null; then
+        shift; set -- -std=c++2b "$@"   # replace -std=c++23
+    fi
+    # g++ uses <name>.gch next to the header given with -include.
+    cp_header="$build/pch.hpp"
+    if [ ! -f "$cp_header.gch" ] || [ "$header" -nt "$cp_header.gch" ]; then
+        cp "$header" "$cp_header"
+        "$cxx" "$@" -x c++-header "$cp_header" -o "$cp_header.gch"
+    fi
+    exec "$cxx" "$@" -include "$cp_header" "$src" -o "$out"
+fi

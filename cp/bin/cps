@@ -1,0 +1,20 @@
+#!/bin/sh
+# Test main.cpp, then submit it to AtCoder with oj.
+# During a contest the submit form has no CAPTCHA, so `oj s` works.
+# If oj fails (e.g. CAPTCHA outside contests), copy main.cpp and open the task page.
+# usage: cps [extra oj submit options]
+#   CP_LANG overrides the language ID (default 6017 = C++23 (GCC 15.2.0)).
+set -eu
+[ -f main.cpp ] || { echo "cps: main.cpp not found" >&2; exit 1; }
+[ -f .url ] || { echo "cps: .url not found (make the directory with cpnew)" >&2; exit 1; }
+cpt
+url=$(cat .url)
+oj s -l "${CP_LANG:-6017}" "$url" main.cpp "$@" && exit 0
+
+echo "cps: oj submit failed. Copying main.cpp and opening the task page instead." >&2
+if [ "$(uname)" = Darwin ]; then
+    pbcopy < main.cpp; open "$url#select-lang"
+else
+    if [ -n "${WAYLAND_DISPLAY:-}" ]; then wl-copy < main.cpp; else xclip -selection clipboard < main.cpp; fi
+    xdg-open "$url#select-lang" >/dev/null 2>&1 &
+fi

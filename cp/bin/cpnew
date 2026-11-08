@@ -1,0 +1,38 @@
+#!/bin/sh
+# Create problem directories with main.cpp and download samples (AtCoder).
+# Works for ABC / ARC / AGC / ADT: the task list is read from the contest page.
+# usage: cpnew https://atcoder.jp/contests/abc400   (URL as is)
+#        cpnew abc400                 -> all tasks
+#        cpnew abc400 a b             -> chosen tasks only
+#        cpnew adt_all_20251106_1     -> AtCoder Daily Training
+set -eu
+
+root=${CP_ROOT:-$HOME/CP}
+template="$HOME/dotfiles/cp/template.cpp"
+
+[ $# -ge 1 ] || { echo "usage: cpnew CONTEST [TASK ...]" >&2; exit 1; }
+# Accept a contest name or any atcoder.jp contest URL.
+contest=$(echo "$1" | sed -e 's|^.*atcoder\.jp/contests/||' -e 's|[/?#].*$||' | tr 'A-Z' 'a-z'); shift
+wanted=$(echo " $* " | tr 'A-Z' 'a-z')
+
+html=$(curl -fsSL "https://atcoder.jp/contests/$contest/tasks") || {
+    echo "cpnew: cannot read the task list (contest not started, or wrong name?)" >&2
+    exit 1
+}
+
+printf '%s\n' "$html" \
+| sed -n 's|.*<td class="text-center no-break"><a href="\(/contests/[^"]*/tasks/[^"]*\)">\([A-Za-z0-9]*\)</a></td>.*|\2 \1|p' \
+| while read -r letter path; do
+    task=$(echo "$letter" | tr 'A-Z' 'a-z')
+    case "$wanted" in "  ") ;; *" $task "*) ;; *) continue ;; esac
+    dir="$root/contests/$contest/$task"
+    url="https://atcoder.jp$path"
+    mkdir -p "$dir"
+    [ -f "$dir/main.cpp" ] || cp "$template" "$dir/main.cpp"
+    echo "$url" > "$dir/.url"
+    if [ ! -d "$dir/test" ]; then
+        (cd "$dir" && oj d "$url" >/dev/null 2>&1) \
+            && echo "$task: ok" || echo "$task: samples not downloaded ($url)"
+    fi
+done
+echo "cd $root/contests/$contest"

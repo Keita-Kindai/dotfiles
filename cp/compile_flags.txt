@@ -1,0 +1,6 @@
+-xc++
+-std=c++23
+-Wall
+-I.
+-Iac-library
+-isystem/opt/homebrew/include

@@ -1,0 +1,6 @@
+#!/bin/sh
+# Build main.cpp and run it against the samples in ./test (oj).
+# usage: cpt [extra oj test options, e.g. -e 1e-6]
+set -eu
+cp-build main.cpp a.out
+exec oj t -c ./a.out -d test "$@"

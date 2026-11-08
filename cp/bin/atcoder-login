@@ -1,0 +1,18 @@
+#!/bin/sh
+# Save the AtCoder REVEL_SESSION cookie for oj (oj login is blocked by Cloudflare).
+# usage: atcoder-login   (then paste the cookie value)
+set -eu
+if [ "$(uname)" = Darwin ]; then
+    dir="$HOME/Library/Application Support/online-judge-tools"
+else
+    dir="${XDG_DATA_HOME:-$HOME/.local/share}/online-judge-tools"
+fi
+mkdir -p "$dir"
+printf 'REVEL_SESSION value: '
+stty -echo; read -r value; stty echo; echo
+cat > "$dir/cookie.jar" <<JAR
+#LWP-Cookies-2.0
+Set-Cookie3: REVEL_SESSION="$value"; path="/"; domain="atcoder.jp"; path_spec; secure; expires="2099-01-01 00:00:00Z"; HttpOnly=None; version=0
+JAR
+chmod 600 "$dir/cookie.jar"
+oj login --check https://atcoder.jp/
